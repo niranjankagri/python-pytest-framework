@@ -73,7 +73,7 @@ class NotesPage:
         self.card(title).wait_for(state="detached")
 
     def search(self, text: str) -> None:
-        """Searches titles and descriptions; the list then shows only the matches."""
+        """Types the text into the search box and submits it; the list then shows only the matching notes."""
         self.search_input.fill(text)
         self.search_button.click()
 
