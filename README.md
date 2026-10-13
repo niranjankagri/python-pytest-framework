@@ -154,7 +154,7 @@ The public demo needs no settings. To run against another copy of the app, set t
 | `NOTES_APP_URL` | `https://practice.expandtesting.com/notes/app` |
 | `NOTES_API_URL` | `https://practice.expandtesting.com/notes/api` |
 | `NOTES_API_TIMEOUT` | `30` (seconds per API request) |
-| `NOTES_UI_TIMEOUT_MS` | `15000` (Playwright wait for actions and `expect`) |
+| `NOTES_UI_TIMEOUT_MS` | `15000` (Playwright wait for actions such as click, fill and `wait_for`; `expect` keeps its own 5 s default) |
 
 ## Running
 
