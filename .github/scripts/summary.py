@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 def main() -> None:
+    """Prints the table for one JUnit XML file: totals, then the names of the failed tests."""
     title, path = sys.argv[1], Path(sys.argv[2])
     print(f"### {title}\n")
     if not path.exists():
