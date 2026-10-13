@@ -14,9 +14,11 @@ from playwright.sync_api import expect
 
 from framework.data.factories import new_note
 
+# demo keeps them out of normal runs; api/ui put each into the matching CI job
 pytestmark = pytest.mark.demo
 
 
+@pytest.mark.ui
 def test_ui_failure_on_purpose(notes_page):
     notes_page.add_note(new_note())
 
@@ -27,6 +29,7 @@ def test_ui_failure_on_purpose(notes_page):
     )
 
 
+@pytest.mark.api
 def test_api_failure_on_purpose(api_client, account):
     response = api_client.login(account.email, "Wrong-Pass-1")
 
@@ -34,10 +37,12 @@ def test_api_failure_on_purpose(api_client, account):
     assert response.status_code == 200, f"demo failure, API answered: {response.json()['message']}"
 
 
+@pytest.mark.api
 def test_skipped_on_purpose():
     pytest.skip("Skipped on purpose to show a skipped test and its reason in the report")
 
 
+@pytest.mark.api
 @pytest.mark.xfail(reason="Demo of a known bug: xfail records it without failing the run", strict=True)
 def test_known_bug_xfail_on_purpose(api_client):
     # strict=True: if this ever passes, pytest reports XPASS(strict) as a failure,

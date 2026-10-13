@@ -1,0 +1,98 @@
+# CI: lint first, then the API tests, then the UI + hybrid tests on three browser engines.
+# Every test job keeps its HTML report (and Playwright traces of failures) as an artifact
+# and writes a pass/fail table to the run's summary page.
+name: CI
+
+on:
+  push:
+  pull_request:
+  # Nightly run, to notice when the public demo site changes
+  schedule:
+    - cron: "0 5 * * *"
+  # Manual run; can also run the report demo (fails and skips on purpose)
+  workflow_dispatch:
+    inputs:
+      markers:
+        description: pytest -m expression
+        type: choice
+        options: ["not demo", "demo"]
+        default: "not demo"
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: ruff check
+        run: ruff check .
+      - name: ruff format --check
+        run: ruff format --check .
+
+  api:
+    name: API tests
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      # API tests need no browser; 4 workers, every test has its own user
+      - name: pytest -m api
+        run: pytest -m "api and (${{ inputs.markers || 'not demo' }})" -n 4 --junitxml=reports/junit.xml
+      - name: Summary
+        if: always()
+        run: python .github/scripts/summary.py "API tests" reports/junit.xml >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-api
+          path: reports/
+          if-no-files-found: ignore
+
+  ui:
+    name: UI + hybrid tests (${{ matrix.browser }})
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      # Only the browser of this job, with the Linux libraries it needs
+      - name: Install ${{ matrix.browser }}
+        run: playwright install --with-deps ${{ matrix.browser }}
+      - name: pytest -m "ui or e2e" on ${{ matrix.browser }}
+        run: >
+          pytest -m "(ui or e2e) and (${{ inputs.markers || 'not demo' }})"
+          --browser ${{ matrix.browser }} -n 3 --junitxml=reports/junit.xml
+      - name: Summary
+        if: always()
+        run: python .github/scripts/summary.py "UI + hybrid tests on ${{ matrix.browser }}" reports/junit.xml >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the report and traces
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-${{ matrix.browser }}
+          path: |
+            reports/
+            test-results/
+          if-no-files-found: ignore
