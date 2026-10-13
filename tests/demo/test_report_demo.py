@@ -20,6 +20,7 @@ pytestmark = pytest.mark.demo
 
 @pytest.mark.ui
 def test_ui_failure_on_purpose(notes_page):
+    """Demo: fails on purpose, so the report shows a UI failure with its screenshot."""
     notes_page.add_note(new_note())
 
     # Wrong on purpose: one note was added, the app says 0/1, the test expects 1/1.
@@ -31,6 +32,7 @@ def test_ui_failure_on_purpose(notes_page):
 
 @pytest.mark.api
 def test_api_failure_on_purpose(api_client, account):
+    """Demo: fails on purpose, so the report shows an API failure with the API's message."""
     response = api_client.login(account.email, "Wrong-Pass-1")
 
     # Wrong on purpose: a wrong password gets 401; the message shows what the API said
@@ -39,12 +41,14 @@ def test_api_failure_on_purpose(api_client, account):
 
 @pytest.mark.api
 def test_skipped_on_purpose():
+    """Demo: skipped on purpose, so the report shows a skipped test with its reason."""
     pytest.skip("Skipped on purpose to show a skipped test and its reason in the report")
 
 
 @pytest.mark.api
 @pytest.mark.xfail(reason="Demo of a known bug: xfail records it without failing the run", strict=True)
 def test_known_bug_xfail_on_purpose(api_client):
+    """Demo: an expected failure (xfail), the way a known, ticketed bug is recorded."""
     # strict=True: if this ever passes, pytest reports XPASS(strict) as a failure,
     # a reminder to remove the xfail once the bug is fixed
     assert api_client.health_check().json()["message"] == "Notes API is Down"
