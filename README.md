@@ -220,3 +220,5 @@ ruff format .         # format
 ## More
 
 - [docs/framework-design.md](docs/framework-design.md): the design decisions and their reasons.
+- [docs/interview-questions.md](docs/interview-questions.md) ([PDF](docs/interview-questions.pdf)):
+  86 pytest, Playwright, API testing and Python interview questions, each linked to the code here.
