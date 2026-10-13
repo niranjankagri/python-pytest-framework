@@ -187,6 +187,7 @@ A run where all tests passed:
 ![All tests passed](docs/images/report-all-passed.png)
 
 The report demo (`pytest -m demo`) shows:
+
 - the UI failure with its screenshot;
 - the API failure with the API's message;
 - the strict xfail;
