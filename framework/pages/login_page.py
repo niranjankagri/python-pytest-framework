@@ -21,6 +21,7 @@ class LoginPage:
         self.field_errors = page.locator(".invalid-feedback")
 
     def open(self) -> "LoginPage":
+        """Opens the login page; returns itself, so a fixture can write LoginPage(...).open()."""
         self.page.goto(self.url)
         return self
 

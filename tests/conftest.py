@@ -117,6 +117,7 @@ BLOCKED_HOSTS = (
 
 
 def _block_ads(route: Route) -> None:
+    """Route handler for every request of the page: aborts ad and tracking hosts, lets the rest through."""
     if any(host in route.request.url for host in BLOCKED_HOSTS):
         route.abort()
     else:

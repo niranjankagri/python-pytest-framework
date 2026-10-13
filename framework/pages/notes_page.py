@@ -11,6 +11,7 @@ class NotesPage:
 
     def __init__(self, page: Page, settings: Settings) -> None:
         self.page = page
+        # The home page of the app is the notes list
         self.url = settings.app_url
         # List and its states
         self.cards = page.get_by_test_id("note-card")
@@ -39,6 +40,7 @@ class NotesPage:
         return self
 
     def wait_until_loaded(self) -> None:
+        """Waits until the notes list has finished loading (with or without notes)."""
         # The app shows a spinner first; either the progress line or the empty message ends it.
         # Both are always in the page, one of them hidden (d-none), so wait for the visible one.
         self.progress.or_(self.no_notes_message).filter(visible=True).first.wait_for()
@@ -71,6 +73,7 @@ class NotesPage:
         self.card(title).wait_for(state="detached")
 
     def search(self, text: str) -> None:
+        """Searches titles and descriptions; the list then shows only the matches."""
         self.search_input.fill(text)
         self.search_button.click()
 
