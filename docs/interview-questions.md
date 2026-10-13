@@ -202,8 +202,8 @@ Compare tuples, sets or models in a single assert, so that a failure shows all t
 
 ```python
 assert (note.title, note.description, note.category) == (data.title, data.description, category)
-assert {note.id for note in notes} == created          # order does not matter
-assert ApiResponse[Note].model_validate(response.json()).data == note   # pydantic models compare by value
+assert {note.id for note in notes} == created  # order does not matter
+assert ApiResponse[Note].model_validate(response.json()).data == note  # pydantic models compare by value
 ```
 
 **In the framework:**
@@ -283,7 +283,7 @@ then decides how many items it needs, and the fixture cleans up all of them:
 @pytest.fixture
 def unregistered_cleanup(settings):
     created = []
-    yield created                      # the test appends (email, password)
+    yield created  # the test appends (email, password)
     for email, password in created:
         _delete_account(settings, email, password)
 ```
@@ -461,7 +461,7 @@ may still be updating. Use `expect` for anything shown in the page.
 
 ```python
 expect(notes_page.progress).to_have_text("You have completed all notes")
-expect(notes_page.card_titles).to_have_text([notes["Work"].title])   # the exact list of elements
+expect(notes_page.card_titles).to_have_text([notes["Work"].title])  # the exact list of elements
 ```
 
 **In the framework:** UI tests assert with `expect`; plain `assert` is used only for API values.
@@ -619,7 +619,7 @@ A contract test checks that the response has the agreed shape: every field prese
 types and allowed values, and no surprise fields. In pydantic you describe the shape once as a model:
 
 ```python
-class Note(Contract):            # Contract sets extra="forbid"
+class Note(Contract):  # Contract sets extra="forbid"
     id: str
     category: Literal["Home", "Work", "Personal"]
     completed: bool
@@ -649,9 +649,10 @@ class ApiResponse(Contract, Generic[T]):
     message: str
     data: T | None = None
 
-ApiResponse[Note]          # one note
-ApiResponse[list[Note]]    # a list
-ApiResponse[User]          # a user
+
+ApiResponse[Note]  # one note
+ApiResponse[list[Note]]  # a list
+ApiResponse[User]  # a user
 ```
 
 ### Q50. pydantic or JSON Schema (jsonschema library)?
