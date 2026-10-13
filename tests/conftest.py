@@ -169,8 +169,11 @@ def pytest_configure(config) -> None:
     except ImportError:  # pytest-metadata comes with pytest-html; without it there is no table
         return
     settings = load_settings()
-    config.stash[metadata_key]["App URL"] = settings.app_url
-    config.stash[metadata_key]["API URL"] = settings.api_url
+    metadata = config.stash[metadata_key]
+    # pytest-metadata copies JAVA_HOME from the environment: irrelevant here, and it shows a local path
+    metadata.pop("JAVA_HOME", None)
+    metadata["App URL"] = settings.app_url
+    metadata["API URL"] = settings.api_url
 
 
 @pytest.hookimpl(hookwrapper=True)
