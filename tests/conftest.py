@@ -5,12 +5,14 @@ account is deleted afterwards (also when the test failed). So tests never share 
 in any order and in parallel, and leave nothing behind on the public demo.
 """
 
+import base64
 import warnings
 from collections.abc import Iterator
 from dataclasses import dataclass
 
 import pytest
 from playwright.sync_api import Page, Route
+from pytest_html import extras
 
 from framework.api.notes_client import NotesApiClient
 from framework.config import Settings, load_settings
@@ -150,3 +152,39 @@ def notes_page(app_page: Page, settings: Settings, logged_in_client: NotesApiCli
     """
     app_page.context.add_init_script(f"window.localStorage.setItem('token', '{logged_in_client.token}');")
     return NotesPage(app_page, settings).open()
+
+
+# --- report --------------------------------------------------------------------------------------
+
+
+def pytest_html_report_title(report) -> None:
+    """Title of the HTML report."""
+    report.title = "Notes app: API, UI and hybrid tests"
+
+
+def pytest_configure(config) -> None:
+    """Environment table of the HTML report: which app and API this run tested."""
+    try:
+        from pytest_metadata.plugin import metadata_key
+    except ImportError:  # pytest-metadata comes with pytest-html; without it there is no table
+        return
+    settings = load_settings()
+    config.stash[metadata_key]["App URL"] = settings.app_url
+    config.stash[metadata_key]["API URL"] = settings.api_url
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """When a UI test fails, embed a screenshot of the browser into its row of the HTML report."""
+    outcome = yield
+    report = outcome.get_result()
+    if report.when != "call" or not report.failed:
+        return
+    page = item.funcargs.get("page")
+    if page is None or page.is_closed():
+        return
+    try:
+        png = page.screenshot(full_page=True)
+    except Exception:  # a crashed page must not hide the real failure
+        return
+    report.extras = [*getattr(report, "extras", []), extras.png(base64.b64encode(png).decode())]
