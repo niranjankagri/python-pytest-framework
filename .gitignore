@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Test output: HTML report, Playwright screenshots, videos and traces
+reports/
+test-results/
+
+# IDE files
+.idea/
+.vscode/

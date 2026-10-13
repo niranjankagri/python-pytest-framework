@@ -1,0 +1,15 @@
+# Test framework (pinned, so a run today and in six months uses the same versions)
+pytest==9.1.1
+pytest-xdist==3.8.0
+pytest-html==4.2.0
+
+# UI: Playwright for Python and its pytest plugin (page, context and browser fixtures)
+playwright==1.63.0
+pytest-playwright==0.10.0
+
+# API: HTTP client and typed response contracts
+requests==2.34.2
+pydantic==2.14.1
+
+# Lint and format
+ruff==0.17.0

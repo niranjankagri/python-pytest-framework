@@ -1,0 +1,17 @@
+[project]
+name = "python-pytest-framework"
+version = "1.0.0"
+description = "pytest + Playwright for Python + requests framework for the Expand Testing Notes app (UI and REST API)"
+requires-python = ">=3.11"
+
+# ruff: linter and formatter, run in CI before any test
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I import order, B bugbear, UP pyupgrade, PT pytest style, SIM simplify
+select = ["E", "W", "F", "I", "B", "UP", "PT", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["framework"]
