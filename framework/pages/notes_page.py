@@ -51,6 +51,10 @@ class NotesPage:
             has=self.page.get_by_test_id("note-card-title").get_by_text(title, exact=True)
         )
 
+    def card_description(self, title: str) -> Locator:
+        """The description shown on the card of the note with this title."""
+        return self.card(title).get_by_test_id("note-card-description")
+
     def add_note(self, note: NoteData, completed: bool = False) -> None:
         """Creates a note through the form and waits until its card is shown."""
         self.add_button.click()

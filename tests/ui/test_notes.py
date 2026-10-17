@@ -18,8 +18,7 @@ def test_note_added_through_the_form_is_listed(notes_page):
     notes_page.add_note(note)
 
     # Assert
-    card = notes_page.card(note.title)
-    expect(card.get_by_test_id("note-card-description")).to_have_text(note.description)
+    expect(notes_page.card_description(note.title)).to_have_text(note.description)
     expect(notes_page.progress).to_have_text("You have 0/1 notes completed in the all categories")
 
 

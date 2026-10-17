@@ -30,8 +30,7 @@ def test_note_created_through_the_api_is_shown_in_the_app(logged_in_client, note
     notes_page.open()
 
     # Assert
-    card = notes_page.card(note.title)
-    expect(card.get_by_test_id("note-card-description")).to_have_text(note.description)
+    expect(notes_page.card_description(note.title)).to_have_text(note.description)
 
 
 def test_category_filter_shows_only_that_category(logged_in_client, notes_page):
