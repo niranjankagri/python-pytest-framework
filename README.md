@@ -208,7 +208,10 @@ nightly run catches changes to the public site. The jobs are:
 
 Each test job writes a pass/fail table to the run's summary page. It also keeps its HTML report and
 traces as an artifact. A manual run (Run workflow) can choose the `demo` markers, to see failures in
-CI.
+CI. [Automation Coverage & Quality Intelligence](https://github.com/niranjankagri/automation-coverage-quality-intelligence) reads the
+`junit.xml` in these artifacts for its cross-repository dashboard.
+
+`main` is protected by a ruleset: every change goes through a pull request, and the CI jobs above must pass before it is merged.
 
 ## Code quality
 
@@ -222,3 +225,7 @@ ruff format .         # format
 - [docs/framework-design.md](docs/framework-design.md): the design decisions and their reasons.
 - [docs/interview-questions.md](docs/interview-questions.md) ([PDF](docs/interview-questions.pdf)):
   86 pytest, Playwright, API testing and Python interview questions, each linked to the code here.
+
+## License
+
+[MIT](LICENSE)
