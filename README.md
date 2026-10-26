@@ -211,6 +211,8 @@ traces as an artifact. A manual run (Run workflow) can choose the `demo` markers
 CI. [Automation Coverage & Quality Intelligence](https://github.com/niranjankagri/automation-coverage-quality-intelligence) reads the
 `junit.xml` in these artifacts for its cross-repository dashboard.
 
+Dependabot proposes dependency and GitHub Actions updates once a month (minor and patch updates grouped, major versions as separate pull requests).
+
 `main` is protected by a ruleset: every change goes through a pull request, and the CI jobs above must pass before it is merged.
 
 ## Code quality
