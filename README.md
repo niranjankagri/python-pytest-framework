@@ -23,10 +23,10 @@ and also both together: hybrid tests set up data through the API and check it in
 | pytest | 9.1.1 | runner, fixtures, markers, parametrize |
 | pytest-xdist | 3.8.0 | parallel runs (`-n 4`) |
 | pytest-html | 4.2.0 | HTML report |
-| Playwright + pytest-playwright | 1.63.0 / 0.10.0 | browser tests, `--browser`, screenshots, video, traces |
+| Playwright + pytest-playwright | 1.64.1 / 0.10.0 | browser tests, `--browser`, screenshots, video, traces |
 | requests | 2.34.2 | REST API client |
 | pydantic | 2.14.1 | response contracts (schema checks) |
-| ruff | 0.17.0 | lint and format |
+| ruff | 0.17.2 | lint and format |
 
 ## Project structure
 
