@@ -11,7 +11,7 @@ pytestmark = pytest.mark.ui
 
 
 @pytest.mark.smoke
-def test_valid_login_opens_the_notes_page(login_page, account, settings):
+def test_tc101_valid_login_opens_the_notes_page(login_page, account, settings):
     """A registered user logs in through the form and lands on their (still empty) notes page."""
     # Act: the `account` fixture registered this user through the API
     login_page.login(account.email, account.password)
@@ -23,7 +23,7 @@ def test_valid_login_opens_the_notes_page(login_page, account, settings):
     expect(notes.no_notes_message).to_have_text("You don't have any notes in all categories")
 
 
-def test_wrong_password_shows_an_error(login_page, account):
+def test_tc102_wrong_password_shows_an_error(login_page, account):
     """A wrong password shows the error message and keeps the user on the login page."""
     # Act
     login_page.login(account.email, "Wrong-Pass-1")
@@ -33,7 +33,7 @@ def test_wrong_password_shows_an_error(login_page, account):
     expect(login_page.page).to_have_url(login_page.url)
 
 
-def test_empty_form_asks_for_email_and_password(login_page):
+def test_tc103_empty_form_asks_for_email_and_password(login_page):
     """Submitting the empty form shows a 'required' hint under both fields."""
     # Act: submit without typing anything
     login_page.submit.click()

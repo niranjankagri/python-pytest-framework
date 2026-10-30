@@ -9,7 +9,7 @@ pytestmark = pytest.mark.ui
 
 
 @pytest.mark.smoke
-def test_note_added_through_the_form_is_listed(notes_page):
+def test_tc104_note_added_through_the_form_is_listed(notes_page):
     """A note added through the form appears as a card with its description, and the counter shows 0/1."""
     # Arrange: `notes_page` is already logged in as a new user without notes
     note = new_note("Work")
@@ -22,7 +22,7 @@ def test_note_added_through_the_form_is_listed(notes_page):
     expect(notes_page.progress).to_have_text("You have 0/1 notes completed in the all categories")
 
 
-def test_completing_a_note_updates_the_progress(notes_page):
+def test_tc105_completing_a_note_updates_the_progress(notes_page):
     """Completing one of two notes changes the progress line to 1/2."""
     # Arrange: two notes through the form
     first, second = new_note(), new_note()
@@ -36,7 +36,7 @@ def test_completing_a_note_updates_the_progress(notes_page):
     expect(notes_page.progress).to_have_text("You have 1/2 notes completed in the all categories")
 
 
-def test_completing_every_note_shows_all_done(notes_page):
+def test_tc106_completing_every_note_shows_all_done(notes_page):
     """When every note is completed, the progress line says so."""
     # Arrange
     note = new_note()
@@ -49,7 +49,7 @@ def test_completing_every_note_shows_all_done(notes_page):
     expect(notes_page.progress).to_have_text("You have completed all notes")
 
 
-def test_deleted_note_disappears_after_confirming(notes_page):
+def test_tc107_deleted_note_disappears_after_confirming(notes_page):
     """A note deleted through its card and the confirmation dialog is gone from the list."""
     # Arrange
     note = new_note()
@@ -63,7 +63,7 @@ def test_deleted_note_disappears_after_confirming(notes_page):
     expect(notes_page.no_notes_message).to_have_text("You don't have any notes in all categories")
 
 
-def test_search_shows_only_matching_notes(notes_page):
+def test_tc108_search_shows_only_matching_notes(notes_page):
     """Searching for one note's title shows that note only."""
     # Arrange: two notes with different unique titles
     wanted, other = new_note(), new_note()
@@ -77,7 +77,7 @@ def test_search_shows_only_matching_notes(notes_page):
     expect(notes_page.card_titles).to_have_text([wanted.title])
 
 
-def test_search_without_match_says_so(notes_page):
+def test_tc109_search_without_match_says_so(notes_page):
     """A search that matches nothing shows no cards and a 'couldn't find' message."""
     # Arrange: the list is not empty, so the message comes from the search
     notes_page.add_note(new_note())

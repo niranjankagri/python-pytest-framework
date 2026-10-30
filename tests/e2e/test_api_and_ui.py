@@ -21,7 +21,7 @@ def create_via_api(client, category: str = "Home") -> Note:
 
 
 @pytest.mark.smoke
-def test_note_created_through_the_api_is_shown_in_the_app(logged_in_client, notes_page):
+def test_tc110_note_created_through_the_api_is_shown_in_the_app(logged_in_client, notes_page):
     """API → UI: a note created through the API is shown in the app with its description."""
     # Arrange: create the note through the API (fast)
     note = create_via_api(logged_in_client, "Personal")
@@ -33,7 +33,7 @@ def test_note_created_through_the_api_is_shown_in_the_app(logged_in_client, note
     expect(notes_page.card_description(note.title)).to_have_text(note.description)
 
 
-def test_category_filter_shows_only_that_category(logged_in_client, notes_page):
+def test_tc111_category_filter_shows_only_that_category(logged_in_client, notes_page):
     """API → UI: with one note per category, the Work filter shows only the Work note."""
     # Arrange: one note in each category, through the API
     notes = {
@@ -48,7 +48,7 @@ def test_category_filter_shows_only_that_category(logged_in_client, notes_page):
     expect(notes_page.card_titles).to_have_text([notes["Work"].title])
 
 
-def test_note_completed_in_the_app_is_completed_in_the_api(logged_in_client, notes_page):
+def test_tc112_note_completed_in_the_app_is_completed_in_the_api(logged_in_client, notes_page):
     """UI → API: a note completed in the app is stored as completed on the server."""
     # Arrange
     note = create_via_api(logged_in_client)
@@ -63,7 +63,7 @@ def test_note_completed_in_the_app_is_completed_in_the_api(logged_in_client, not
     assert stored.completed is True
 
 
-def test_note_deleted_in_the_app_is_gone_from_the_api(logged_in_client, notes_page):
+def test_tc113_note_deleted_in_the_app_is_gone_from_the_api(logged_in_client, notes_page):
     """UI → API: a note deleted in the app no longer exists on the server."""
     # Arrange
     note = create_via_api(logged_in_client)
@@ -76,7 +76,7 @@ def test_note_deleted_in_the_app_is_gone_from_the_api(logged_in_client, notes_pa
     assert logged_in_client.get_note(note.id).status_code == 404
 
 
-def test_note_changed_through_the_api_shows_the_new_text(logged_in_client, notes_page):
+def test_tc114_note_changed_through_the_api_shows_the_new_text(logged_in_client, notes_page):
     """API → UI: a note renamed through the API shows the new title after the app reloads."""
     # Arrange: a note that the app already shows
     note = create_via_api(logged_in_client)
