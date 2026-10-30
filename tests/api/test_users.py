@@ -14,7 +14,7 @@ pytestmark = pytest.mark.api
 
 
 @pytest.mark.smoke
-def test_register_returns_the_new_user(api_client, unregistered_cleanup):
+def test_tc202_register_returns_the_new_user(api_client, unregistered_cleanup):
     """A new user can register: 201, a confirmation message and the user's own name and email back."""
     # Arrange: unique name, email and password for this test
     user = new_user()
@@ -31,7 +31,7 @@ def test_register_returns_the_new_user(api_client, unregistered_cleanup):
     assert (body.data.name, body.data.email) == (user.name, user.email)
 
 
-def test_register_refuses_an_email_that_is_taken(api_client, account):
+def test_tc203_register_refuses_an_email_that_is_taken(api_client, account):
     """Registering with an email that already has an account fails with 409 Conflict."""
     # Act: the `account` fixture has already registered this email
     response = api_client.register("Someone Else", account.email, "Other-Pass-1")
@@ -50,7 +50,7 @@ def test_register_refuses_an_email_that_is_taken(api_client, account):
     ],
     ids=["invalid-email", "name-too-short", "password-too-short"],
 )
-def test_register_validates_its_fields(api_client, unregistered_cleanup, field, value, message):
+def test_tc204_register_validates_its_fields(api_client, unregistered_cleanup, field, value, message):
     """Each invalid field is refused with 400 and its own message (one report row per case)."""
     # Arrange: a valid user, with one field replaced by the invalid value of this case
     user = new_user()
@@ -70,7 +70,7 @@ def test_register_validates_its_fields(api_client, unregistered_cleanup, field, 
 
 
 @pytest.mark.smoke
-def test_login_returns_a_token(api_client, account):
+def test_tc205_login_returns_a_token(api_client, account):
     """Logging in with the right password returns the user's email and a 64-character hex token."""
     # Act
     response = api_client.login(account.email, account.password)
@@ -83,7 +83,7 @@ def test_login_returns_a_token(api_client, account):
 
 
 @pytest.mark.parametrize("case", ["wrong-password", "unknown-user"])
-def test_login_failure_does_not_reveal_which_part_was_wrong(api_client, account, case):
+def test_tc206_login_failure_does_not_reveal_which_part_was_wrong(api_client, account, case):
     """A wrong password and an unknown email get exactly the same 401 answer.
 
     Different answers would let an attacker find out which emails have an account.
@@ -102,7 +102,7 @@ def test_login_failure_does_not_reveal_which_part_was_wrong(api_client, account,
 # --- profile ----------------------------------------------------------------------------------
 
 
-def test_profile_returns_the_logged_in_user(logged_in_client, account):
+def test_tc207_profile_returns_the_logged_in_user(logged_in_client, account):
     """The profile endpoint returns the user that the token belongs to."""
     # Act: the client sends the token of `account`
     response = logged_in_client.get_profile()
@@ -121,7 +121,7 @@ def test_profile_returns_the_logged_in_user(logged_in_client, account):
     ],
     ids=["no-token", "invalid-token"],
 )
-def test_profile_requires_a_valid_token(api_client, token, message):
+def test_tc208_profile_requires_a_valid_token(api_client, token, message):
     """Without a token, or with an invalid one, the profile is refused with 401 and a clear message."""
     # Arrange: no token at all, or one the server never issued
     api_client.token = token
@@ -134,7 +134,7 @@ def test_profile_requires_a_valid_token(api_client, token, message):
     assert response.json()["message"] == message
 
 
-def test_profile_update_returns_the_new_values(logged_in_client):
+def test_tc209_profile_update_returns_the_new_values(logged_in_client):
     """Updating the profile stores the new name, phone and company and returns them."""
     # Act
     response = logged_in_client.update_profile(name="Updated Name", phone="01234567890", company="Acme QA")
@@ -145,7 +145,7 @@ def test_profile_update_returns_the_new_values(logged_in_client):
     assert (user.name, user.phone, user.company) == ("Updated Name", "01234567890", "Acme QA")
 
 
-def test_profile_update_validates_the_phone_number(logged_in_client):
+def test_tc210_profile_update_validates_the_phone_number(logged_in_client):
     """A phone number shorter than 8 digits is refused with 400 and the rule in the message."""
     # Act: 3 digits, the API needs 8-20
     response = logged_in_client.update_profile(name="Updated Name", phone="123", company="Acme QA")
@@ -158,7 +158,7 @@ def test_profile_update_validates_the_phone_number(logged_in_client):
 # --- password and logout ----------------------------------------------------------------------
 
 
-def test_changed_password_replaces_the_old_one(logged_in_client, api_client, account):
+def test_tc211_changed_password_replaces_the_old_one(logged_in_client, api_client, account):
     """After a password change, only the new password works for logging in."""
     # Arrange
     new_password = "Changed-Pass-1"
@@ -173,7 +173,7 @@ def test_changed_password_replaces_the_old_one(logged_in_client, api_client, acc
     assert api_client.login(account.email, new_password).status_code == 200
 
 
-def test_change_password_checks_the_current_password(logged_in_client):
+def test_tc212_change_password_checks_the_current_password(logged_in_client):
     """The password cannot be changed without the correct current password (400)."""
     # Act: a wrong current password
     response = logged_in_client.change_password("Not-The-Password-1", "Changed-Pass-1")
@@ -183,7 +183,7 @@ def test_change_password_checks_the_current_password(logged_in_client):
     assert response.json()["message"] == "The current password is incorrect"
 
 
-def test_logout_invalidates_the_token(logged_in_client):
+def test_tc213_logout_invalidates_the_token(logged_in_client):
     """After logout the same token is refused, so a stolen token stops working once the user logs out."""
     # Arrange: log out (the client keeps the old token)
     assert logged_in_client.logout().status_code == 200

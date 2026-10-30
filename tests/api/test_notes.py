@@ -19,7 +19,7 @@ def create(client, category: str = "Home") -> Note:
 
 @pytest.mark.smoke
 @pytest.mark.parametrize("category", ["Home", "Work", "Personal"])
-def test_create_note_in_each_category(logged_in_client, category):
+def test_tc214_create_note_in_each_category(logged_in_client, category):
     """A note can be created in each of the three categories, and the API returns exactly what was sent."""
     # Arrange: unique title and description, category of this case
     data = new_note(category)
@@ -34,7 +34,7 @@ def test_create_note_in_each_category(logged_in_client, category):
     assert note.completed is False
 
 
-def test_get_notes_lists_every_note_of_the_user(logged_in_client):
+def test_tc215_get_notes_lists_every_note_of_the_user(logged_in_client):
     """The list contains exactly the user's own notes: no more, no fewer."""
     # Arrange: two notes through the API (the user is new, so these are all of them)
     created = {create(logged_in_client, "Home").id, create(logged_in_client, "Work").id}
@@ -48,7 +48,7 @@ def test_get_notes_lists_every_note_of_the_user(logged_in_client):
     assert {note.id for note in notes} == created
 
 
-def test_get_note_by_id(logged_in_client):
+def test_tc216_get_note_by_id(logged_in_client):
     """Reading a note by id returns the same note that creating it returned."""
     # Arrange
     note = create(logged_in_client)
@@ -61,7 +61,7 @@ def test_get_note_by_id(logged_in_client):
     assert ApiResponse[Note].model_validate(response.json()).data == note
 
 
-def test_put_replaces_every_field(logged_in_client):
+def test_tc217_put_replaces_every_field(logged_in_client):
     """PUT replaces all fields of a note and moves its updated_at forward."""
     # Arrange
     note = create(logged_in_client, "Home")
@@ -81,7 +81,7 @@ def test_put_replaces_every_field(logged_in_client):
     assert updated.updated_at >= note.updated_at
 
 
-def test_patch_changes_only_the_completed_flag(logged_in_client):
+def test_tc218_patch_changes_only_the_completed_flag(logged_in_client):
     """PATCH changes the completed flag and leaves every other field as it was."""
     # Arrange
     note = create(logged_in_client)
@@ -100,7 +100,7 @@ def test_patch_changes_only_the_completed_flag(logged_in_client):
     )
 
 
-def test_deleted_note_is_gone(logged_in_client):
+def test_tc219_deleted_note_is_gone(logged_in_client):
     """A deleted note can no longer be read: 404 with the not-found message."""
     # Arrange
     note = create(logged_in_client)
@@ -128,7 +128,7 @@ def test_deleted_note_is_gone(logged_in_client):
     ],
     ids=["title-too-short", "description-too-short", "unknown-category"],
 )
-def test_create_note_validates_its_fields(logged_in_client, title, description, category, message):
+def test_tc220_create_note_validates_its_fields(logged_in_client, title, description, category, message):
     """Each invalid field of a new note is refused with 400 and its own message."""
     # Act: one invalid value per case, the other fields valid
     response = logged_in_client.create_note(title, description, category)
@@ -146,7 +146,7 @@ def test_create_note_validates_its_fields(logged_in_client, title, description, 
     ],
     ids=["malformed-id", "unknown-id"],
 )
-def test_get_note_with_a_bad_id(logged_in_client, note_id, status, message):
+def test_tc221_get_note_with_a_bad_id(logged_in_client, note_id, status, message):
     """A malformed id is a client error (400); a well-formed id that does not exist is 404."""
     # Act
     response = logged_in_client.get_note(note_id)
@@ -156,7 +156,7 @@ def test_get_note_with_a_bad_id(logged_in_client, note_id, status, message):
     assert response.json()["message"] == message
 
 
-def test_users_cannot_see_or_delete_each_others_notes(logged_in_client, settings, second_account):
+def test_tc222_users_cannot_see_or_delete_each_others_notes(logged_in_client, settings, second_account):
     """Another logged-in user can neither read nor delete a user's note (no IDOR / BOLA hole)."""
     # Arrange: user A owns a note; user B logs in with its own client
     note = create(logged_in_client)
@@ -173,7 +173,7 @@ def test_users_cannot_see_or_delete_each_others_notes(logged_in_client, settings
     assert logged_in_client.get_note(note.id).status_code == 200, "the owner's note must be untouched"
 
 
-def test_notes_require_a_token(api_client):
+def test_tc223_notes_require_a_token(api_client):
     """The notes cannot be listed without logging in."""
     # Act: a client that never logged in
     response = api_client.get_notes()

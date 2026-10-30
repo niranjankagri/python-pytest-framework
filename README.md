@@ -85,7 +85,7 @@ config (where it is)             framework/config.py  ←  environment variables
 
 ## How a test runs
 
-**API test**, for example `test_get_note_by_id(logged_in_client)`:
+**API test**, for example `test_tc216_get_note_by_id(logged_in_client)`:
 
 1. The `settings` fixture reads the environment, once per run.
 2. The `account` fixture registers a brand-new user through the API.
@@ -95,7 +95,7 @@ config (where it is)             framework/config.py  ←  environment variables
    model: `ApiResponse[Note].model_validate(response.json())`.
 5. Teardown deletes the account and, with it, all its notes. This also runs when the test failed.
 
-**UI test**, for example `test_completing_a_note_updates_the_progress(notes_page)`:
+**UI test**, for example `test_tc105_completing_a_note_updates_the_progress(notes_page)`:
 
 1. A user is registered and logged in through the API (steps 1-3 above). This is much faster than
    filling in the login form every time.
@@ -111,7 +111,7 @@ config (where it is)             framework/config.py  ←  environment variables
    and a trace in `test-results/`.
 7. Teardown deletes the account.
 
-**Hybrid test**, for example `test_note_completed_in_the_app_is_completed_in_the_api`:
+**Hybrid test**, for example `test_tc112_note_completed_in_the_app_is_completed_in_the_api`:
 
 1. It creates notes through the API.
 2. It changes them in the browser.
@@ -133,6 +133,10 @@ Each side checks the other, and the set-up costs one HTTP call instead of a form
 
 The markers are defined in `pytest.ini`: `api`, `ui`, `e2e`, `smoke` and `demo`. `smoke` marks the 9
 quickest checks of the main paths. `--strict-markers` turns a misspelt marker into an error.
+
+Every test function starts with its case ID (`test_tc214_create_note_in_each_category`); run one case with
+`pytest -k tc214`. The cases are written out for a manual run (setup, steps, expected results, data sets) in
+[docs/manual-test-cases.md](docs/manual-test-cases.md): UI TC-101 to TC-109, hybrid TC-110 to TC-114, API TC-201 to TC-223.
 
 ## Setup
 
