@@ -1,5 +1,5 @@
 # Test framework (pinned, so a run today and in six months uses the same versions)
-pytest==9.1.1
+pytest==9.2.0
 pytest-xdist==3.8.0
 pytest-html==4.2.0
 
@@ -12,4 +12,4 @@ requests==2.34.2
 pydantic==2.14.1
 
 # Lint and format
-ruff==0.17.2
+ruff==0.17.3
