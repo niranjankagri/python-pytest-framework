@@ -13,7 +13,7 @@ and also both together: hybrid tests set up data through the API and check it in
 | Browsers | Chromium, Firefox, WebKit (Safari's engine) |
 | Speed | about 1 m 45 s for the 46 tests with 4 parallel workers (pytest-xdist) |
 | Reports | one self-contained HTML file; a failed UI test gets an embedded screenshot, plus a trace and video in `test-results/` |
-| CI | GitHub Actions: lint first, then API tests, then UI + hybrid tests on all three browsers in parallel; also runs nightly |
+| CI | GitHub Actions: lint first, then API tests, then UI + hybrid tests on all three browsers, one browser at a time; also runs nightly |
 
 ## Tech stack
 
@@ -215,10 +215,15 @@ The report demo (`pytest -m demo`) shows:
 nightly run catches changes to the public site. The jobs are:
 
 1. **lint** runs `ruff check` and `ruff format --check`. The tests only start when the code is clean.
-2. **api** runs `pytest -m api -n 4`.
+2. **api** runs `pytest -m api -n 2`.
 3. **ui** is a matrix of three jobs: Chromium, Firefox and WebKit. Each one installs only its own
-   browser, then runs `pytest -m "ui or e2e" --browser <name> -n 3`. With `fail-fast: false`, a
-   failure on one browser does not cancel the others.
+   browser, then runs `pytest -m "ui or e2e" --browser <name> -n 2`. With `fail-fast: false`, a
+   failure on one browser does not cancel the others. `max-parallel: 1` runs the browsers one
+   after another.
+
+CI is gentle with the shared public site on purpose: at most 4 test sessions at once (`API_WORKERS`
+and `UI_WORKERS` at the top of the workflow). With 13 at once, runs in Nov 2026 kept
+timing out against it.
 
 Each test job writes a pass/fail table to the run's summary page. It also keeps its HTML report and
 traces as an artifact. A manual run (Run workflow) can choose the `demo` markers, to see failures in
