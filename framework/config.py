@@ -20,6 +20,9 @@ class Settings:
     ui_timeout_ms: int
     # Milliseconds one page load may take; longer than ui_timeout_ms, the demo is sometimes slow
     ui_navigation_timeout_ms: int
+    # Milliseconds to wait for what the app shows after a server round trip: a saved or deleted
+    # note, the loaded list, a search result, the progress text (also expect()'s default)
+    ui_server_timeout_ms: int
     # How often a timed-out page load or API call is tried in total (framework/retry.py); 1 = no retry
     attempts: int
 
@@ -32,5 +35,6 @@ def load_settings() -> Settings:
         api_timeout=float(os.getenv("NOTES_API_TIMEOUT", "30")),
         ui_timeout_ms=int(os.getenv("NOTES_UI_TIMEOUT_MS", "15000")),
         ui_navigation_timeout_ms=int(os.getenv("NOTES_UI_NAVIGATION_TIMEOUT_MS", "30000")),
+        ui_server_timeout_ms=int(os.getenv("NOTES_UI_SERVER_TIMEOUT_MS", "30000")),
         attempts=max(1, int(os.getenv("NOTES_ATTEMPTS", "3"))),
     )

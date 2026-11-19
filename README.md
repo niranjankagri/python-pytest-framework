@@ -160,8 +160,9 @@ The public demo needs no settings. To run against another copy of the app, set t
 | `NOTES_APP_URL` | `https://practice.expandtesting.com/notes/app` |
 | `NOTES_API_URL` | `https://practice.expandtesting.com/notes/api` |
 | `NOTES_API_TIMEOUT` | `30` (seconds per API request) |
-| `NOTES_UI_TIMEOUT_MS` | `15000` (Playwright wait for actions such as click, fill and `wait_for`; `expect` keeps its own 5 s default) |
+| `NOTES_UI_TIMEOUT_MS` | `15000` (Playwright wait for actions such as click and fill) |
 | `NOTES_UI_NAVIGATION_TIMEOUT_MS` | `30000` (one page load) |
+| `NOTES_UI_SERVER_TIMEOUT_MS` | `30000` (what the app shows after a server round trip: a saved or deleted note, the loaded list; also the default of `expect`) |
 | `NOTES_ATTEMPTS` | `3` (tries in total for a page load or API call that timed out; `1` turns retrying off) |
 
 The public demo is sometimes slow, so a page load or API call that **times out** is tried again,
@@ -169,6 +170,10 @@ with a short pause in between (`framework/retry.py`). A wrong answer is never re
 wrong body or a missing element fails the test at once. API calls are only repeated when that is
 harmless (GET, PUT, PATCH, DELETE and login); a timed-out registration in a fixture starts over
 with a new user. Every retry is logged and shows up in the report of a test that still failed.
+
+Steps inside a test (submitting a form, a check with `expect`) are not retried; they get a longer
+wait instead (`NOTES_UI_SERVER_TIMEOUT_MS`). A longer wait never lets a wrong result pass: the
+check still fails if the page does not match in time, it only takes longer to say so.
 
 ## Running
 

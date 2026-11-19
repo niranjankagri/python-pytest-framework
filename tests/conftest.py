@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 import pytest
 import requests
-from playwright.sync_api import Page, Route
+from playwright.sync_api import Page, Route, expect
 from pytest_html import extras
 
 from framework.api.notes_client import NotesApiClient
@@ -141,6 +141,18 @@ def _block_ads(route: Route) -> None:
         route.abort()
     else:
         route.continue_()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def expect_timeout(settings: Settings) -> None:
+    """expect() waits as long as a server round trip may take (settings.ui_server_timeout_ms).
+
+    UI checks mostly look at what the app shows after it talked to the server (progress text,
+    search results, a URL after login), and the public demo is sometimes slow. A longer wait
+    never makes a wrong result pass: expect() still fails if the page does not match in time,
+    it only takes longer to say so. A test can still pass its own timeout=...
+    """
+    expect.set_options(timeout=settings.ui_server_timeout_ms)
 
 
 @pytest.fixture(scope="session")
