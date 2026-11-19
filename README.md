@@ -33,11 +33,13 @@ and also both together: hybrid tests set up data through the API and check it in
 ```
 python-pytest-framework
 ├── framework/                    reusable code, no tests and no assertions
-│   ├── config.py                 Settings: URLs and timeouts from environment variables
+│   ├── config.py                 Settings: URLs, timeouts and attempts from environment variables
+│   ├── retry.py                  with_retries: tries a slow page load or API call again
 │   ├── api/
 │   │   ├── notes_client.py       NotesApiClient: one method per API endpoint (requests.Session)
 │   │   └── models.py             pydantic models: the API's contract (User, Note, ApiResponse[T])
 │   ├── pages/
+│   │   ├── navigation.py         open_page: page load with its own timeout, retried when slow
 │   │   ├── login_page.py         LoginPage: Page Object of the login form
 │   │   └── notes_page.py         NotesPage: Page Object of the notes list, form, search, filters
 │   └── data/
@@ -159,6 +161,14 @@ The public demo needs no settings. To run against another copy of the app, set t
 | `NOTES_API_URL` | `https://practice.expandtesting.com/notes/api` |
 | `NOTES_API_TIMEOUT` | `30` (seconds per API request) |
 | `NOTES_UI_TIMEOUT_MS` | `15000` (Playwright wait for actions such as click, fill and `wait_for`; `expect` keeps its own 5 s default) |
+| `NOTES_UI_NAVIGATION_TIMEOUT_MS` | `30000` (one page load) |
+| `NOTES_ATTEMPTS` | `3` (tries in total for a page load or API call that timed out; `1` turns retrying off) |
+
+The public demo is sometimes slow, so a page load or API call that **times out** is tried again,
+with a short pause in between (`framework/retry.py`). A wrong answer is never retried: a 400, a
+wrong body or a missing element fails the test at once. API calls are only repeated when that is
+harmless (GET, PUT, PATCH, DELETE and login); a timed-out registration in a fixture starts over
+with a new user. Every retry is logged and shows up in the report of a test that still failed.
 
 ## Running
 

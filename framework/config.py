@@ -16,8 +16,12 @@ class Settings:
     api_url: str
     # Seconds for one HTTP call (connect + read) to the API
     api_timeout: float
-    # Milliseconds Playwright waits for an element or a navigation
+    # Milliseconds Playwright waits for an element (click, fill, wait_for)
     ui_timeout_ms: int
+    # Milliseconds one page load may take; longer than ui_timeout_ms, the demo is sometimes slow
+    ui_navigation_timeout_ms: int
+    # How often a timed-out page load or API call is tried in total (framework/retry.py); 1 = no retry
+    attempts: int
 
 
 def load_settings() -> Settings:
@@ -27,4 +31,6 @@ def load_settings() -> Settings:
         api_url=os.getenv("NOTES_API_URL", "https://practice.expandtesting.com/notes/api").rstrip("/"),
         api_timeout=float(os.getenv("NOTES_API_TIMEOUT", "30")),
         ui_timeout_ms=int(os.getenv("NOTES_UI_TIMEOUT_MS", "15000")),
+        ui_navigation_timeout_ms=int(os.getenv("NOTES_UI_NAVIGATION_TIMEOUT_MS", "30000")),
+        attempts=max(1, int(os.getenv("NOTES_ATTEMPTS", "3"))),
     )

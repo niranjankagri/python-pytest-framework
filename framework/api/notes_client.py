@@ -8,9 +8,18 @@ framework.api.models). Tests never build URLs or headers themselves.
 import requests
 
 from framework.config import Settings
+from framework.retry import with_retries
 
 # Header the API reads the session token from
 TOKEN_HEADER = "x-auth-token"
+
+# Methods that may be sent again after a timeout: repeating them leaves the server in the same state.
+# POST is left out: a repeated create_note would make two notes, a repeated change_password would
+# fail because the first one already changed it. A single call can still opt in or out (retry=...).
+SAFE_TO_REPEAT = frozenset({"GET", "PUT", "PATCH", "DELETE"})
+
+# The errors of a slow or unreachable server; anything the server actually answers is not retried
+NETWORK_ERRORS = (requests.Timeout, requests.ConnectionError)
 
 
 class NotesApiClient:
@@ -19,19 +28,34 @@ class NotesApiClient:
     def __init__(self, settings: Settings) -> None:
         self._base_url = settings.api_url
         self._timeout = settings.api_timeout
+        self._attempts = settings.attempts
         # One session per client: keeps the connection open between calls
         self._session = requests.Session()
         self.token: str | None = None
 
     # --- plumbing -------------------------------------------------------------------------------
 
-    def _request(self, method: str, path: str, **kwargs) -> requests.Response:
-        """Sends a request; adds the token header when the client is logged in."""
+    def _request(self, method: str, path: str, *, retry: bool | None = None, **kwargs) -> requests.Response:
+        """Sends a request; adds the token header when the client is logged in.
+
+        After a timeout or a lost connection the request is sent again (settings.attempts in total)
+        if repeating it is harmless: by default for SAFE_TO_REPEAT methods, or as `retry` says.
+        """
         headers = kwargs.pop("headers", {})
         if self.token is not None:
             headers.setdefault(TOKEN_HEADER, self.token)
-        return self._session.request(
-            method, f"{self._base_url}{path}", headers=headers, timeout=self._timeout, **kwargs
+
+        def send() -> requests.Response:
+            return self._session.request(
+                method, f"{self._base_url}{path}", headers=headers, timeout=self._timeout, **kwargs
+            )
+
+        repeatable = method in SAFE_TO_REPEAT if retry is None else retry
+        return with_retries(
+            send,
+            retry_on=NETWORK_ERRORS,
+            attempts=self._attempts if repeatable else 1,
+            what=f"{method} {path}",
         )
 
     def close(self) -> None:
@@ -57,7 +81,10 @@ class NotesApiClient:
 
         On success the client keeps the token and sends it with every later call.
         """
-        response = self._request("POST", "/users/login", data={"email": email, "password": password})
+        # A POST, but safe to repeat: logging in again only hands out another token
+        response = self._request(
+            "POST", "/users/login", data={"email": email, "password": password}, retry=True
+        )
         if response.status_code == 200:
             self.token = response.json()["data"]["token"]
         return response
@@ -85,7 +112,8 @@ class NotesApiClient:
 
         The client keeps the old token on purpose, so a test can prove it is now refused.
         """
-        return self._request("DELETE", "/users/logout")
+        # Not repeated: if the first logout got through, a second one is refused (401) and fails the test
+        return self._request("DELETE", "/users/logout", retry=False)
 
     def delete_account(self) -> requests.Response:
         """DELETE /users/delete-account: removes the logged-in user and all their notes (used by clean-up)."""

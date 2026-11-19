@@ -4,6 +4,7 @@ from playwright.sync_api import Locator, Page
 
 from framework.config import Settings
 from framework.data.factories import NoteData
+from framework.pages.navigation import open_page
 
 
 class NotesPage:
@@ -11,6 +12,7 @@ class NotesPage:
 
     def __init__(self, page: Page, settings: Settings) -> None:
         self.page = page
+        self.settings = settings
         # The home page of the app is the notes list
         self.url = settings.app_url
         # List and its states
@@ -35,8 +37,7 @@ class NotesPage:
 
     def open(self) -> "NotesPage":
         """Opens the home page and waits until the list has loaded (cards or the empty message)."""
-        self.page.goto(self.url)
-        self.wait_until_loaded()
+        open_page(self.page, self.url, self.settings, wait_until_ready=self.wait_until_loaded)
         return self
 
     def wait_until_loaded(self) -> None:
