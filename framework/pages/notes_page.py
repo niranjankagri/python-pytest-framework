@@ -68,8 +68,12 @@ class NotesPage:
         self.form_title.fill(note.title)
         self.form_description.fill(note.description)
         self.form_submit.click()
-        # The card appears once the server has saved the note
-        self.card(note.title).wait_for(timeout=self.settings.ui_server_timeout_ms)
+        # After saving, the app reloads the whole page and fetches the list again, so the card
+        # appears only after a save, a page load and a list load: wait for a page load plus a
+        # server round trip (on 20 Nov 2026 that chain took about 32 s on the slow demo)
+        self.card(note.title).wait_for(
+            timeout=self.settings.ui_navigation_timeout_ms + self.settings.ui_server_timeout_ms
+        )
 
     def toggle_completed(self, title: str) -> None:
         """Flips the completed switch on the note's card."""
