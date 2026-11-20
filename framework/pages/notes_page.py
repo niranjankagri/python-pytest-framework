@@ -4,6 +4,7 @@ from playwright.sync_api import Locator, Page
 
 from framework.config import Settings
 from framework.data.factories import NoteData
+from framework.pages.navigation import open_page
 
 
 class NotesPage:
@@ -11,6 +12,7 @@ class NotesPage:
 
     def __init__(self, page: Page, settings: Settings) -> None:
         self.page = page
+        self.settings = settings
         # The home page of the app is the notes list
         self.url = settings.app_url
         # List and its states
@@ -35,15 +37,17 @@ class NotesPage:
 
     def open(self) -> "NotesPage":
         """Opens the home page and waits until the list has loaded (cards or the empty message)."""
-        self.page.goto(self.url)
-        self.wait_until_loaded()
+        open_page(self.page, self.url, self.settings, wait_until_ready=self.wait_until_loaded)
         return self
 
     def wait_until_loaded(self) -> None:
         """Waits until the notes list has finished loading (with or without notes)."""
         # The app shows a spinner first; either the progress line or the empty message ends it.
         # Both are always in the page, one of them hidden (d-none), so wait for the visible one.
-        self.progress.or_(self.no_notes_message).filter(visible=True).first.wait_for()
+        # The list comes from the server, so this waits as long as a server round trip may take.
+        self.progress.or_(self.no_notes_message).filter(visible=True).first.wait_for(
+            timeout=self.settings.ui_server_timeout_ms
+        )
 
     def card(self, title: str) -> Locator:
         """The card of the note with exactly this title."""
@@ -64,7 +68,8 @@ class NotesPage:
         self.form_title.fill(note.title)
         self.form_description.fill(note.description)
         self.form_submit.click()
-        self.card(note.title).wait_for()
+        # The card appears once the server has saved the note
+        self.card(note.title).wait_for(timeout=self.settings.ui_server_timeout_ms)
 
     def toggle_completed(self, title: str) -> None:
         """Flips the completed switch on the note's card."""
@@ -74,7 +79,8 @@ class NotesPage:
         """Deletes the note: delete button, then confirm in the dialog."""
         self.card(title).get_by_test_id("note-delete").click()
         self.delete_confirm.click()
-        self.card(title).wait_for(state="detached")
+        # The card goes once the server has deleted the note
+        self.card(title).wait_for(state="detached", timeout=self.settings.ui_server_timeout_ms)
 
     def search(self, text: str) -> None:
         """Types the text into the search box and submits it; the list then shows only the matching notes."""

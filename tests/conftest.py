@@ -11,7 +11,8 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 
 import pytest
-from playwright.sync_api import Page, Route
+import requests
+from playwright.sync_api import Page, Route, expect
 from pytest_html import extras
 
 from framework.api.notes_client import NotesApiClient
@@ -19,6 +20,7 @@ from framework.config import Settings, load_settings
 from framework.data.factories import new_user
 from framework.pages.login_page import LoginPage
 from framework.pages.notes_page import NotesPage
+from framework.retry import with_retries
 
 
 @dataclass
@@ -57,15 +59,37 @@ def _delete_account(settings: Settings, email: str, password: str) -> None:
         client.close()
 
 
+def _register_new_account(settings: Settings) -> Account:
+    """Registers a brand-new user through the API.
+
+    Registering is a POST and the client does not repeat it (a repeat with the same email would get
+    409 if the first one got through). So after a timeout this tries again with a *new* user. The
+    timed-out one may exist on the server without us knowing its password was accepted; it is a
+    throwaway account on the public demo, so that is acceptable.
+    """
+
+    def register_once() -> Account:
+        credentials = new_user()
+        client = NotesApiClient(settings)
+        try:
+            response = client.register(credentials.name, credentials.email, credentials.password)
+        finally:
+            client.close()
+        assert response.status_code == 201, f"Could not register a test user: {response.text}"
+        return Account(credentials.name, credentials.email, credentials.password)
+
+    return with_retries(
+        register_once,
+        retry_on=(requests.Timeout, requests.ConnectionError),
+        attempts=settings.attempts,
+        what="registering a test user",
+    )
+
+
 @pytest.fixture
 def account(settings: Settings) -> Iterator[Account]:
     """A freshly registered user, deleted after the test."""
-    credentials = new_user()
-    client = NotesApiClient(settings)
-    response = client.register(credentials.name, credentials.email, credentials.password)
-    client.close()
-    assert response.status_code == 201, f"Could not register a test user: {response.text}"
-    registered = Account(credentials.name, credentials.email, credentials.password)
+    registered = _register_new_account(settings)
     yield registered
     _delete_account(settings, registered.email, registered.password)
 
@@ -73,12 +97,7 @@ def account(settings: Settings) -> Iterator[Account]:
 @pytest.fixture
 def second_account(settings: Settings) -> Iterator[Account]:
     """Another registered user, for tests about what one user may see of another's data."""
-    credentials = new_user()
-    client = NotesApiClient(settings)
-    response = client.register(credentials.name, credentials.email, credentials.password)
-    client.close()
-    assert response.status_code == 201, f"Could not register a second test user: {response.text}"
-    registered = Account(credentials.name, credentials.email, credentials.password)
+    registered = _register_new_account(settings)
     yield registered
     _delete_account(settings, registered.email, registered.password)
 
@@ -122,6 +141,18 @@ def _block_ads(route: Route) -> None:
         route.abort()
     else:
         route.continue_()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def expect_timeout(settings: Settings) -> None:
+    """expect() waits as long as a server round trip may take (settings.ui_server_timeout_ms).
+
+    UI checks mostly look at what the app shows after it talked to the server (progress text,
+    search results, a URL after login), and the public demo is sometimes slow. A longer wait
+    never makes a wrong result pass: expect() still fails if the page does not match in time,
+    it only takes longer to say so. A test can still pass its own timeout=...
+    """
+    expect.set_options(timeout=settings.ui_server_timeout_ms)
 
 
 @pytest.fixture(scope="session")

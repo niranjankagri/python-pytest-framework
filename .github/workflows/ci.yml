@@ -20,6 +20,11 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
+  # How hard CI may hit the shared public demo site. All jobs together used to keep 13 sessions
+  # open at once (API -n 4, plus three browsers at -n 3), and in Nov 2026 those runs kept timing
+  # out against it. Now: 2 API workers, 2 UI workers, and one browser job at a time (max-parallel).
+  API_WORKERS: 2
+  UI_WORKERS: 2
 
 jobs:
   lint:
@@ -48,9 +53,9 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
       - run: pip install -r requirements.txt
-      # API tests need no browser; 4 workers, every test has its own user
+      # API tests need no browser; every test has its own user, so workers never collide
       - name: pytest -m api
-        run: pytest -m "api and (${{ inputs.markers || 'not demo' }})" -n 4 --junitxml=reports/junit.xml
+        run: pytest -m "api and (${{ inputs.markers || 'not demo' }})" -n ${{ env.API_WORKERS }} --junitxml=reports/junit.xml
       - name: Summary
         if: always()
         run: python .github/scripts/summary.py "API tests" reports/junit.xml >> "$GITHUB_STEP_SUMMARY"
@@ -68,6 +73,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # One browser at a time, so the demo site never serves three browser jobs at once
+      max-parallel: 1
       matrix:
         browser: [chromium, firefox, webkit]
     steps:
@@ -83,7 +90,7 @@ jobs:
       - name: pytest -m "ui or e2e" on ${{ matrix.browser }}
         run: >
           pytest -m "(ui or e2e) and (${{ inputs.markers || 'not demo' }})"
-          --browser ${{ matrix.browser }} -n 3 --junitxml=reports/junit.xml
+          --browser ${{ matrix.browser }} -n ${{ env.UI_WORKERS }} --junitxml=reports/junit.xml
       - name: Summary
         if: always()
         run: python .github/scripts/summary.py "UI + hybrid tests on ${{ matrix.browser }}" reports/junit.xml >> "$GITHUB_STEP_SUMMARY"

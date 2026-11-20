@@ -3,6 +3,7 @@
 from playwright.sync_api import Page
 
 from framework.config import Settings
+from framework.pages.navigation import open_page
 
 
 class LoginPage:
@@ -10,6 +11,7 @@ class LoginPage:
 
     def __init__(self, page: Page, settings: Settings) -> None:
         self.page = page
+        self.settings = settings
         self.url = f"{settings.app_url}/login"
         # Locators: the app gives every control a data-testid, the most stable choice
         self.email = page.get_by_test_id("login-email")
@@ -22,7 +24,7 @@ class LoginPage:
 
     def open(self) -> "LoginPage":
         """Opens the login page; returns itself, so a fixture can write LoginPage(...).open()."""
-        self.page.goto(self.url)
+        open_page(self.page, self.url, self.settings)
         return self
 
     def login(self, email: str, password: str) -> None:
